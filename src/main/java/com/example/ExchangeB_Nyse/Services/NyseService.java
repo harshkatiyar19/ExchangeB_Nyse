@@ -12,6 +12,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
+
+
 @Service
 public class NyseService {
 
@@ -38,29 +40,78 @@ public class NyseService {
     }
 
     public void sendRandomNumber() {
-
-        int year=2025,month=6,date=24,hours=15,minutes=30;
         Symbol symbol=Symbol.fromCode(random.nextInt(1,8));
-        float basePrice=0;
+        float basePrice;
+        float minFluctuation;
+        float maxFluctuation;
+        int minQty;
+        int maxQty;
 
         switch (symbol) {
-            case APPL -> basePrice = 180.0f;   // Apple Inc.
-            case TSLA -> basePrice = 190.0f;   // Tesla Inc.
-            case GOOGL -> basePrice = 135.0f;  // Alphabet Inc. (Google)
-            case MSFT -> basePrice = 340.0f;   // Microsoft Corp.
-            case AMZN -> basePrice = 125.0f;   // Amazon.com Inc.
-            case NVDA -> basePrice = 1100.0f;  // NVIDIA Corp.
-            case META -> basePrice = 460.0f;   // Meta Platforms Inc.
-            default -> basePrice = 100.0f;     // Default fallback
+            case APPL -> {
+                basePrice = 180.0f;
+                minFluctuation = -3.0f;
+                maxFluctuation = 5.0f;
+                minQty = 10;
+                maxQty = 200;
+            }
+            case TSLA -> {
+                basePrice = 190.0f;
+                minFluctuation = -8.0f;
+                maxFluctuation = 10.0f;
+                minQty = 5;
+                maxQty = 100;
+            }
+            case GOOGL -> {
+                basePrice = 135.0f;
+                minFluctuation = -2.0f;
+                maxFluctuation = 4.0f;
+                minQty = 15;
+                maxQty = 250;
+            }
+            case MSFT -> {
+                basePrice = 340.0f;
+                minFluctuation = -4.0f;
+                maxFluctuation = 6.0f;
+                minQty = 10;
+                maxQty = 150;
+            }
+            case AMZN -> {
+                basePrice = 125.0f;
+                minFluctuation = -3.0f;
+                maxFluctuation = 5.0f;
+                minQty = 20;
+                maxQty = 300;
+            }
+            case NVDA -> {
+                basePrice = 1100.0f;
+                minFluctuation = -20.0f;
+                maxFluctuation = 30.0f;
+                minQty = 2;
+                maxQty = 50;
+            }
+            case META -> {
+                basePrice = 460.0f;
+                minFluctuation = -10.0f;
+                maxFluctuation = 12.0f;
+                minQty = 8;
+                maxQty = 120;
+            }
+            default -> {
+                basePrice = 100.0f;
+                minFluctuation = -5.0f;
+                maxFluctuation = 5.0f;
+                minQty = 10;
+                maxQty = 100;
+            }
         }
 
-        final float min = basePrice-50;
-        final float max = basePrice+50;
+        float price = roundToTwoDecimals(basePrice + minFluctuation + random.nextFloat() * (maxFluctuation - minFluctuation));
+        int qty = random.nextInt(minQty, maxQty + 1);
 
-        float price = roundToTwoDecimals(min + random.nextFloat() * (max - min));
-
-        int qty = random.nextInt(10,101);
+        int year=2025,month=6,date=24,hours=15,minutes=30;
         int filledQty = random.nextInt(0,qty+1);
+
         int remainingQty=qty-filledQty;
 
         int orderStatusCode =0;
@@ -96,8 +147,9 @@ public class NyseService {
         OrderStatus orderStatus = OrderStatus.fromCode(orderStatusCode) ;
         OrderValidity orderValidity = OrderValidity.fromCode(orderValidityCode);
 
+
         int id = random.nextInt(0,10000);
-        Book book = new Book(id,symbol,side,price,qty,filledQty,remainingQty,orderType,orderStatus,orderValidity,timestamp,"NYSE");
+        Book book = new Book(id,symbol,side,price,qty,filledQty,remainingQty,orderType,orderStatus,orderValidity,timestamp,"NASDQ");
 
 
         template.convertAndSend("/topic/book", book);
