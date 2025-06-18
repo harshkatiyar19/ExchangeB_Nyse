@@ -2,12 +2,17 @@ package com.example.ExchangeB_Nyse.Services;
 
 
 import com.example.ExchangeB_Nyse.DTO.*;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 
 @Service
@@ -16,9 +21,21 @@ public class NyseService {
     @Autowired
     private SimpMessagingTemplate template;
 
+    @Autowired
+    private TaskScheduler taskScheduler;
+
     private final Random random = new Random();
 
-    @Scheduled(fixedRate = 2000) // every 2 seconds
+    @PostConstruct
+    public void startRandomSchedule() {
+        scheduleNextRun();
+    }
+
+    private void scheduleNextRun() {
+        long delay = 1000 + random.nextInt(5000); // 1s to 6s delay
+        taskScheduler.schedule(this::sendRandomNumber, Instant.now().plusMillis(delay));
+    }
+
     public void sendRandomNumber() {
         float min = 10.5f;
         float max = 20.5f;
@@ -31,8 +48,15 @@ public class NyseService {
 
         int orderStatusCode =0;
 
-        LocalDateTime specificTime = LocalDateTime.of(year,month,date,hours,minutes);
-        LocalDateTime timestamp = LocalDateTime.now();
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month); // or 5
+        calendar.set(Calendar.DAY_OF_MONTH, date);
+        calendar.set(Calendar.HOUR_OF_DAY, hours);
+        calendar.set(Calendar.MINUTE, minutes);
+        calendar.set(Calendar.SECOND, 0);
+        Date specificTime = calendar.getTime();
+        Date timestamp = new Date();
 
         int orderValidityCode = random.nextInt(1,6);
 
@@ -40,7 +64,7 @@ public class NyseService {
         if(filledQty==0){
             orderStatusCode=1;//,7;
         } else if (filledQty>0&&filledQty<qty) {
-            if(timestamp.isAfter(specificTime)&&orderValidityCode==1){
+            if(timestamp.after(specificTime)&&orderValidityCode==1){
                 orderStatusCode=4;
             }else{
                 orderStatusCode=2;
@@ -60,6 +84,6 @@ public class NyseService {
 
         template.convertAndSend("/topic/book", book);
 //        System.out.println("Sending book: " + book);
-
+        scheduleNextRun();
     }
 }
