@@ -5,7 +5,7 @@ import java.util.Date;
 
 public record Book(
         int orderId,
-        String Symbol,
+        Symbol symbol,
         Side side,
         float price,
         int qty,
@@ -14,7 +14,8 @@ public record Book(
         OrderType orderType,
         OrderStatus orderStatus,
         OrderValidity orderValidity,
-        Date timeStamp
+        Date timeStamp,
+        String exchange
         //int userId,
 
 ) {}

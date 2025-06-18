@@ -6,11 +6,8 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
@@ -36,12 +33,17 @@ public class NyseService {
         taskScheduler.schedule(this::sendRandomNumber, Instant.now().plusMillis(delay));
     }
 
+    private float roundToTwoDecimals(float value) {
+        return (float) (Math.round(value * 100.0) / 100.0);
+    }
+
     public void sendRandomNumber() {
-        float min = 10.5f;
-        float max = 20.5f;
+        final float min = 10.2f;
+        final float max = 200.2f;
         int year=2025,month=6,date=24,hours=15,minutes=30;
 
-        float price = min + random.nextFloat() * (max - min);
+        float price = roundToTwoDecimals(min + random.nextFloat() * (max - min));
+
         int qty = random.nextInt(10,101);
         int filledQty = random.nextInt(0,qty+1);
         int remainingQty=qty-filledQty;
@@ -78,8 +80,9 @@ public class NyseService {
         OrderType orderType= OrderType.fromCode(random.nextInt(1,9));
         OrderStatus orderStatus = OrderStatus.fromCode(orderStatusCode) ;
         OrderValidity orderValidity = OrderValidity.fromCode(orderValidityCode);
-        int id = random.nextInt();
-        Book book = new Book(id,"APPL",side,price,qty,filledQty,remainingQty,orderType,orderStatus,orderValidity,timestamp);
+        Symbol symbol=Symbol.fromCode(random.nextInt(1,8));
+        int id = random.nextInt(0,10000);
+        Book book = new Book(id,symbol,side,price,qty,filledQty,remainingQty,orderType,orderStatus,orderValidity,timestamp,"NYSE");
 
 
         template.convertAndSend("/topic/book", book);
